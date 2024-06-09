@@ -2,11 +2,11 @@
 pragma solidity ^0.8.10;
 
 error UnauthorizedAccess(address _address); // Customer Error message for gas optimization.
-error UnCallable();
+error UnExecutable();
 
 contract ModifierContract{
 
-    address private owner;
+    address private immutable owner;
 
 
     constructor(){
@@ -28,7 +28,7 @@ contract ModifierContract{
 
     function _checkForTrue(bool condition) internal pure{
         if(condition!=true){
-            revert UnCallable();
+            revert UnExecutable();
         }
     }
 
