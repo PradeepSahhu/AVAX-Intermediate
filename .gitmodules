@@ -1,0 +1,3 @@
+[submodule "Functions_AND_ERRORS-ETH_AVAX/event-challenge"]
+	path = Functions_AND_ERRORS-ETH_AVAX/event-challenge
+	url = https://github.com/MetacrafterChris/event-challenge.git
