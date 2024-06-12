@@ -1,9 +1,9 @@
 "use client";
-import Image from "next/image";
-import { useState, useEffect } from "react";
+
+import { useState, useEffect, useRef } from "react";
 import socialABI from "../artifacts/contracts/SocialMedia.sol/SocialMedia.json";
 import { ethers } from "ethers";
-import SocialContractConnection from "@/Connections/mainConnection";
+import { X } from "lucide-react";
 
 export default function Home() {
   const [ethWindow, setEthWindow] = useState(null);
@@ -16,7 +16,8 @@ export default function Home() {
   const [countFriends, setCountFriends] = useState();
   const [ownerAddress, setOwnerAddress] = useState();
   const [removedFriends, setRemovedFriends] = useState();
-  const [removeIndex, setRemoveIndex] = useState();
+  const [showPopUp, setShowPopUp] = useState(false);
+  const socialModal = useRef();
 
   const contractAddress = "0xdbE34587178C409B253c500F5379694fA896f681";
 
@@ -88,6 +89,43 @@ export default function Home() {
     }
   };
 
+  const refereceModal = (e) => {
+    if (socialModal.current == e.target) {
+      setShowPopUp(false);
+    }
+  };
+
+  function AddFriendPopUp() {
+    return (
+      <div
+        ref={socialModal}
+        onClick={refereceModal}
+        className="fixed inset-0 bg-black bg-opacity-30 backdrop-blur-sm flex justify-center items-center"
+      >
+        <div className="mt-10 flex flex-col gap-5 text-white">
+          <button
+            className="place-self-end"
+            onClick={() => setShowPopUp(false)}
+          >
+            <X size={30} />
+          </button>
+          <div className="bg-black rounded-xl flex flex-col px-20 py-10 gap-5 items-center">
+            <h1 className="text-2xl font-extrabold text-white ">
+              New friend added
+              {newAddress}
+            </h1>
+            <button
+              className="px-10 py-5 bg-blue-900 rounded-lg"
+              onClick={() => setShowPopUp(false)}
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   const getOwnerAddress = async () => {
     try {
       if (!contractInstance) {
@@ -98,6 +136,21 @@ export default function Home() {
     } catch (error) {
       console.log("Their is somethig wrong in getOwnerAddress");
       console.log(error);
+    }
+  };
+
+  const EventListener = async () => {
+    if (contractInstance) {
+      contractInstance.on("AddFriend", (newFriend, friendNumber) => {
+        console.log(`${newFriend} added as the ${friendNumber}`);
+        setShowPopUp(true);
+      });
+
+      contractInstance.on("RemoveFriend", (friendAddress, noOfFriend) => {
+        console.log(
+          `Removed the friend from the list ${friendAddress} and ${noOfFriend}`
+        );
+      });
     }
   };
   const addFriends = async () => {
@@ -118,9 +171,9 @@ export default function Home() {
         console.log("error in contractInstance");
       }
       console.log(removeIndex);
-      // const newFriend = await contractInstance.removeFriendsFromList(
-      //   removeIndex
-      // );
+      const newFriend = await contractInstance.removeFriendsFromList(
+        removeIndex
+      );
     } catch (error) {
       console.log("error in contract instance in remove friends");
       console.log(error);
@@ -134,30 +187,41 @@ export default function Home() {
   useEffect(() => {
     ConnectToContract();
     initialize();
+    EventListener();
   }, []);
+
+  useEffect(() => {
+    EventListener();
+    getOwnerAddress();
+  }, [contractInstance]);
 
   return (
     <div className=" bg-black h-full">
-      <div className="grid justify-center items-center m-10 text-2xl ">
-        <p className="bg-gradient-to-br from-red-600 via-amber-500 to-green-600 bg-clip-text text-transparent">
-          Welcome to Social Media Application
-        </p>
-      </div>
+      {contractInstance != undefined && (
+        <div>
+          <div className="grid justify-center items-center m-10 text-2xl ">
+            <p className="bg-gradient-to-br from-red-600 via-amber-500 to-green-600 bg-clip-text text-transparent">
+              Welcome to Social Media Application
+            </p>
+          </div>
+          <div className="grid items-center justify-center">
+            <button
+              onClick={ConnectToMetamask}
+              className="px-10 py-4 bg-gradient-to-r from-red-600 via-amber-500 to-green-600 text-lg rounded-xl"
+            >
+              connect to MetaMask
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="text-white">
         <p className="text-2xl bg-gradient-to-br from-blue-700 to-purple-600  bg-clip-text text-transparent m-4">
           Account is {ownerAddress}
         </p>
       </div>
-      {}
-      <div className="grid items-center justify-center">
-        <button
-          onClick={ConnectToMetamask}
-          className="px-10 py-4 bg-gradient-to-r from-red-600 via-amber-500 to-green-600 text-lg rounded-xl"
-        >
-          connect to MetaMask
-        </button>
-      </div>
+
+      {showPopUp && <AddFriendPopUp />}
 
       {addFriend && (
         <div className=" bg-black text-white grid grid-cols-2 m-10">
