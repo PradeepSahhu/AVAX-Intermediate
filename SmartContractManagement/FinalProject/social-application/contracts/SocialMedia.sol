@@ -50,7 +50,7 @@ contract SocialMedia {
         return friends;
     }
 
-    function correctFriendList() external returns (address[] memory) {
+    function _correctFriendList() internal returns (address[] memory) {
         uint l = friendList.length;
         uint index = 0;
 
@@ -61,7 +61,16 @@ contract SocialMedia {
                 index++;
             }
         }
+
+        while (l > index) {
+            friendList.pop();
+            index++;
+        }
         return friendList;
+    }
+
+    function totalFriendsEverrr() external view returns (uint) {
+        return totalFriendsEver;
     }
 
     function addFriends(address _address) external onlyOwner {
@@ -83,6 +92,7 @@ contract SocialMedia {
         removeFriends++;
         socialScore--;
         emit RemoveFriend(val, removeFriends);
+        _correctFriendList();
     }
 
     function showAddress() external view returns (address) {
